@@ -1,0 +1,1006 @@
+{% comment %}theme-check-disable ImgLazyLoading{% endcomment %}
+{{ 'component-collection-hero.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  @media screen and (max-width: 749px) {
+    .collection-hero--with-image .collection-hero__inner {
+      padding-bottom: calc({{ settings.media_shadow_vertical_offset | at_least: 0 }}px + 2rem);
+    }
+  }
+{%- endstyle -%}
+
+<div class="collection-hero{% if section.settings.show_collection_image and collection.image %} collection-hero--with-image{% endif %} color-{{ section.settings.color_scheme }} gradient">
+  <div class="collection-hero__inner page-width {% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}">
+    <div class="collection-hero__text-wrapper">
+      <h1 class="collection-hero__title">
+        <span class="visually-hidden">{{ 'sections.collection_template.title' | t }}: </span>
+        {{- collection.title | escape -}}
+      </h1>
+
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .catalog-list {
+            margin: 15px 0;
+        }
+        .catalog-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #eaeaea;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .catalog-item:hover {
+            background-color: #f5f5f5;
+        }
+        .catalog-item label {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            cursor: pointer;
+        }
+        .catalog-details {
+            margin-left: 15px;
+            flex-grow: 1;
+        }
+        .catalog-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .catalog-meta {
+            font-size: 14px;
+            color: #666;
+            margin-top: 3px;
+        }
+        .download-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #1a252f;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .download-icon {
+            margin-right: 8px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .select-controls {
+            margin-bottom: 15px;
+        }
+        .select-controls button {
+            background-color: transparent;
+            color: #2c3e50;
+            border: 1px solid #2c3e50;
+            padding: 6px 12px;
+            margin-right: 8px;
+        }
+        .select-controls button:hover {
+            background-color: #eaeaea;
+        }
+    </style>
+
+      <div class="container">
+        <h1>Linesheet Generator</h1>
+        
+        <div class="section">
+            <h2>Your Available Catalogs</h2>
+            <p>Select the catalogs you'd like to include in your linesheet</p>
+            
+            <div class="select-controls">
+                <button id="selectAll">Select All</button>
+                <button id="deselectAll">Deselect All</button>
+            </div>
+            
+            <div id="catalogList" class="catalog-list">
+                <!-- Catalogs will be populated here -->
+                <div class="catalog-item">
+                    <label>
+                        <input type="checkbox" class="catalog-checkbox" data-catalog-id="ss25" checked>
+                        <div class="catalog-details">
+                            <div class="catalog-title">SS25 Style</div>
+                            <div class="catalog-meta">Spring/Summer 2025 • 42 products</div>
+                        </div>
+                    </label>
+                </div>
+                <div class="catalog-item">
+                    <label>
+                        <input type="checkbox" class="catalog-checkbox" data-catalog-id="fw25" checked>
+                        <div class="catalog-details">
+                            <div class="catalog-title">FW25 Style</div>
+                            <div class="catalog-meta">Fall/Winter 2025 • 38 products</div>
+                        </div>
+                    </label>
+                </div>
+                <div class="catalog-item">
+                    <label>
+                        <input type="checkbox" class="catalog-checkbox" data-catalog-id="ss25-skate" checked>
+                        <div class="catalog-details">
+                            <div class="catalog-title">SS25 Skate</div>
+                            <div class="catalog-meta">Spring/Summer 2025 • 24 products</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="download-options">
+            <button id="downloadCombined">
+                <span class="download-icon">📊</span>
+                Download Combined Linesheet
+            </button>
+            <button id="downloadSeparate">
+                <span class="download-icon">📑</span>
+                Download Separate Linesheets
+            </button>
+        </div>
+        
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Mock data - this would be fetched from Shopify API in production
+        const MOCK_COMPANY = {
+            name: "Nyne Ventures",
+            id: "12345",
+            email: "orders@nyneventures.com"
+        };
+        
+        const MOCK_CATALOGS = {
+            "ss25": {
+                id: "ss25",
+                name: "SS25 Style",
+                seasonYear: "Spring/Summer 2025",
+                startShip: "2025-01-15",
+                completeShip: "2025-02-28",
+                products: [
+                    {
+                        id: "prod1",
+                        image: "/api/placeholder/120/120", // Placeholder for demo
+                        name: "Sneaker Model A",
+                        styleNumber: "12345",
+                        color: "Black",
+                        colorCode: "B001",
+                        season: "SS25",
+                        evergreen: "No",
+                        countryOfOrigin: "Vietnam",
+                        fabrication: "Canvas",
+                        materialComposition: "100% Cotton",
+                        category: "Shoes",
+                        subcategory: "Sneakers",
+                        sizeBreak: "1",
+                        wholesalePrice: 33.31,
+                        suggRetailPrice: 114.00
+                    },
+                    {
+                        id: "prod2",
+                        image: "/api/placeholder/120/120", // Placeholder for demo
+                        name: "Sneaker Model B",
+                        styleNumber: "12346",
+                        color: "White",
+                        colorCode: "W001",
+                        season: "SS25",
+                        evergreen: "No",
+                        countryOfOrigin: "Vietnam",
+                        fabrication: "Canvas",
+                        materialComposition: "100% Cotton",
+                        category: "Shoes",
+                        subcategory: "Sneakers",
+                        sizeBreak: "1",
+                        wholesalePrice: 33.31,
+                        suggRetailPrice: 114.00
+                    },
+                    {
+                        id: "prod3",
+                        image: "/api/placeholder/120/120", // Placeholder for demo
+                        name: "T-Shirt Classic",
+                        styleNumber: "22101",
+                        color: "Navy",
+                        colorCode: "N001",
+                        season: "SS25",
+                        evergreen: "Yes",
+                        countryOfOrigin: "Portugal",
+                        fabrication: "Jersey",
+                        materialComposition: "100% Cotton",
+                        category: "Apparel",
+                        subcategory: "T-Shirts",
+                        sizeBreak: "3",
+                        wholesalePrice: 18.00,
+                        suggRetailPrice: 45.00
+                    }
+                ]
+            },
+            "fw25": {
+                id: "fw25",
+                name: "FW25 Style",
+                seasonYear: "Fall/Winter 2025",
+                startShip: "2025-07-15",
+                completeShip: "2025-08-30",
+                products: [
+                    {
+                        id: "prod4",
+                        image: "/api/placeholder/120/120", // Placeholder for demo
+                        name: "Winter Boot A",
+                        styleNumber: "34567",
+                        color: "Brown",
+                        colorCode: "BR001",
+                        season: "FW25",
+                        evergreen: "No",
+                        countryOfOrigin: "Italy",
+                        fabrication: "Leather",
+                        materialComposition: "100% Leather",
+                        category: "Shoes",
+                        subcategory: "Boots",
+                        sizeBreak: "1",
+                        wholesalePrice: 62.50,
+                        suggRetailPrice: 169.00
+                    },
+                    {
+                        id: "prod5",
+                        image: "/api/placeholder/120/120", // Placeholder for demo
+                        name: "Hoodie Classic",
+                        styleNumber: "41101",
+                        color: "Black",
+                        colorCode: "B001",
+                        season: "FW25",
+                        evergreen: "No",
+                        countryOfOrigin: "Portugal",
+                        fabrication: "Fleece",
+                        materialComposition: "80% Cotton, 20% Polyester",
+                        category: "Apparel",
+                        subcategory: "Hoodies",
+                        sizeBreak: "3",
+                        wholesalePrice: 42.00,
+                        suggRetailPrice: 98.00
+                    }
+                ]
+            },
+            "ss25-skate": {
+                id: "ss25-skate",
+                name: "SS25 Skate",
+                seasonYear: "Spring/Summer 2025",
+                startShip: "2025-01-15",
+                completeShip: "2025-02-28",
+                products: [
+                    {
+                        id: "prod6",
+                        image: "/api/placeholder/120/120", // Placeholder for demo
+                        name: "Skate Shoe Pro",
+                        styleNumber: "56789",
+                        color: "Black/White",
+                        colorCode: "BW001",
+                        season: "SS25",
+                        evergreen: "No",
+                        countryOfOrigin: "China",
+                        fabrication: "Suede",
+                        materialComposition: "100% Suede",
+                        category: "Shoes",
+                        subcategory: "Skate Shoes",
+                        sizeBreak: "1",
+                        wholesalePrice: 38.00,
+                        suggRetailPrice: 85.00
+                    },
+                    {
+                        id: "prod7",
+                        image: "/api/placeholder/120/120", // Placeholder for demo
+                        name: "Skate Cap",
+                        styleNumber: "67890",
+                        color: "Grey",
+                        colorCode: "G001",
+                        season: "SS25",
+                        evergreen: "Yes",
+                        countryOfOrigin: "USA",
+                        fabrication: "Cotton Twill",
+                        materialComposition: "100% Cotton",
+                        category: "Accessories",
+                        subcategory: "Caps",
+                        sizeBreak: "4",
+                        wholesalePrice: 15.00,
+                        suggRetailPrice: 32.00
+                    }
+                ]
+            }
+        };
+
+        // Size break definitions
+        const SIZE_BREAKS = {
+            "1": [
+                "M8/W9.5", "M8.5/W10", "M9/W10.5", "M9.5/W11", "M10/W11.5", 
+                "M10.5/W12", "M11/W12.5", "M11.5/W13", "M12/W13.5", "M12.5/W14", 
+                "M13/W14.5", "W5/M3.5", "W5.5/M4", "W6/M4.5", "W6.5/M5", 
+                "W7/M5.5", "W7.5/M6", "W8/M6.5", "W8.5/M7", "W9/M7.5"
+            ],
+            "2": [
+                "M7.5-M8/W9-W9.5", "M8.5-M9/W10-W10.5", "M9.5-M10/W11-W11.5", 
+                "M10.5-M11/W12-W12.5", "M11.5-M12/W13-W13.5", "M12.5-M13/W14-W14.5", 
+                "W5-W5.5/M3.5-M4", "W6-W6.5/M4.5-M5", "W7-W7.5/M5.5-M6", "W8-W8.5/M6.5-M7"
+            ],
+            "3": ["XS", "S", "M", "L", "XL", "XXL"],
+            "4": ["One Size"]
+        };
+
+        // Init UI controls
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllBtn = document.getElementById('selectAll');
+            const deselectAllBtn = document.getElementById('deselectAll');
+            const downloadCombinedBtn = document.getElementById('downloadCombined');
+            const downloadSeparateBtn = document.getElementById('downloadSeparate');
+            const catalogCheckboxes = document.querySelectorAll('.catalog-checkbox');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // Select/Deselect All functionality
+            selectAllBtn.addEventListener('click', function() {
+                catalogCheckboxes.forEach(checkbox => checkbox.checked = true);
+                updateDownloadButtonState();
+            });
+            
+            deselectAllBtn.addEventListener('click', function() {
+                catalogCheckboxes.forEach(checkbox => checkbox.checked = false);
+                updateDownloadButtonState();
+            });
+            
+            // Download buttons
+            downloadCombinedBtn.addEventListener('click', function() {
+                // Get selected catalog IDs
+                const selectedCatalogs = Array.from(catalogCheckboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.dataset.catalogId);
+                
+                if (selectedCatalogs.length === 0) {
+                    showStatusMessage('Please select at least one catalog', 'error');
+                    return;
+                }
+                
+                // Show loading state
+                downloadCombinedBtn.innerHTML = '<span class="loading"></span> Generating...';
+                downloadCombinedBtn.disabled = true;
+                
+                // Generate combined Excel file
+                setTimeout(() => {
+                    generateCombinedExcel(selectedCatalogs);
+                    downloadCombinedBtn.innerHTML = '<span class="download-icon">📊</span> Download Combined Linesheet';
+                    downloadCombinedBtn.disabled = false;
+                    showStatusMessage('Linesheet successfully generated!', 'success');
+                }, 1500); // Simulated delay for API interaction
+            });
+            
+            downloadSeparateBtn.addEventListener('click', function() {
+                // Get selected catalog IDs
+                const selectedCatalogs = Array.from(catalogCheckboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.dataset.catalogId);
+                
+                if (selectedCatalogs.length === 0) {
+                    showStatusMessage('Please select at least one catalog', 'error');
+                    return;
+                }
+                
+                // Show loading state
+                downloadSeparateBtn.innerHTML = '<span class="loading"></span> Generating...';
+                downloadSeparateBtn.disabled = true;
+                
+                // Generate separate Excel files
+                setTimeout(() => {
+                    generateSeparateExcels(selectedCatalogs);
+                    downloadSeparateBtn.innerHTML = '<span class="download-icon">📑</span> Download Separate Linesheets';
+                    downloadSeparateBtn.disabled = false;
+                    showStatusMessage('Linesheets successfully generated!', 'success');
+                }, 1500); // Simulated delay for API interaction
+            });
+            
+            // Update checkboxes state
+            catalogCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateDownloadButtonState);
+            });
+            
+            // Initial state
+            updateDownloadButtonState();
+            
+            // Update download button states based on selections
+            function updateDownloadButtonState() {
+                const selectedCount = Array.from(catalogCheckboxes).filter(cb => cb.checked).length;
+                downloadCombinedBtn.disabled = selectedCount === 0;
+                downloadSeparateBtn.disabled = selectedCount === 0;
+            }
+            
+            // Display status messages
+            function showStatusMessage(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status-message ' + type;
+                statusMessage.style.display = 'block';
+                
+                // Hide after 5 seconds
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
+            }
+        });
+
+        // Generate combined Excel file with all selected catalogs
+        function generateCombinedExcel(catalogIds) {
+            // Create a new workbook
+            const workbook = XLSX.utils.book_new();
+            
+            // Add sheets for each selected catalog
+            for (const catalogId of catalogIds) {
+                const catalog = MOCK_CATALOGS[catalogId];
+                if (!catalog) continue;
+                
+                // Create catalog sheet
+                const catalogSheet = createCatalogSheet(catalog);
+                XLSX.utils.book_append_sheet(workbook, catalogSheet, catalog.name);
+            }
+            
+            // Create and add order summary sheet
+            const orderSummarySheet = createOrderSummarySheet(catalogIds);
+            XLSX.utils.book_append_sheet(workbook, orderSummarySheet, 'Order Summary');
+            
+            // Write to file and trigger download
+            XLSX.writeFile(workbook, `${MOCK_COMPANY.name.replace(/\s+/g, '_')}_Linesheet.xlsx`);
+        }
+        
+        // Generate separate Excel files for each selected catalog
+        function generateSeparateExcels(catalogIds) {
+            // Create a separate file for each catalog
+            for (const catalogId of catalogIds) {
+                const catalog = MOCK_CATALOGS[catalogId];
+                if (!catalog) continue;
+                
+                const workbook = XLSX.utils.book_new();
+                
+                // Create catalog sheet
+                const catalogSheet = createCatalogSheet(catalog);
+                XLSX.utils.book_append_sheet(workbook, catalogSheet, catalog.name);
+                
+                // Create and add order summary sheet (just for this catalog)
+                const orderSummarySheet = createOrderSummarySheet([catalogId]);
+                XLSX.utils.book_append_sheet(workbook, orderSummarySheet, 'Order Summary');
+                
+                // Write to file and trigger download
+                XLSX.writeFile(workbook, `${MOCK_COMPANY.name.replace(/\s+/g, '_')}_${catalog.name.replace(/\s+/g, '_')}_Linesheet.xlsx`);
+            }
+        }
+        
+        // Create a catalog sheet
+        function createCatalogSheet(catalog) {
+            // Create header rows
+            const headerRows = [
+                ['Retailer', MOCK_COMPANY.name, '', '', '', ''],
+                ['Linesheet', catalog.name],
+                ['Start Ship', catalog.startShip],
+                ['Complete Ship', catalog.completeShip],
+                ['Season Year', catalog.seasonYear],
+                []
+            ];
+            
+            // Create column headers
+            const columnHeaders = [
+                'Style Image', 'Style Name', 'Style Number', 'Color', 'Color Code', 'Season', 
+                'Evergreen', 'Country of Origin', 'Fabrication', 'Material Composition', 
+                'Category', 'Subcategory', 'Size Break'
+            ];
+            
+            // Add size columns based on all size breaks
+            const allSizes = [];
+            Object.values(SIZE_BREAKS).forEach(sizes => {
+                sizes.forEach((size, index) => {
+                    if (index >= allSizes.length) {
+                        allSizes.push(`Size ${index + 1}`);
+                    }
+                });
+            });
+            
+            // Add remaining column headers
+            columnHeaders.push(...allSizes);
+            columnHeaders.push('Units', 'Wholesale Price', 'Sugg Retail Price', 'Total Wholesale', 'Total Retail');
+            
+            headerRows.push(columnHeaders);
+            
+            // Create data rows for each product
+            const dataRows = [];
+            
+            // Process each product
+            catalog.products.forEach((product, productIndex) => {
+                const row = [
+                    '', // Image placeholder
+                    product.name,
+                    product.styleNumber,
+                    product.color,
+                    product.colorCode,
+                    product.season,
+                    product.evergreen,
+                    product.countryOfOrigin,
+                    product.fabrication,
+                    product.materialComposition,
+                    product.category,
+                    product.subcategory,
+                    product.sizeBreak
+                ];
+                
+                // Add empty cells for sizes
+                const productSizes = SIZE_BREAKS[product.sizeBreak] || [];
+                const emptySizeCells = allSizes.length;
+                for (let i = 0; i < emptySizeCells; i++) {
+                    row.push('');
+                }
+                
+                // Calculate the cell references for size columns
+                const firstSizeColIndex = 13; // 0-based index of first size column
+                const lastSizeColIndex = firstSizeColIndex + allSizes.length - 1;
+                
+                // Create Excel column references (A, B, C, ... AA, AB, etc.)
+                const getColRef = (index) => {
+                    let colRef = '';
+                    while (index >= 0) {
+                        colRef = String.fromCharCode(65 + (index % 26)) + colRef;
+                        index = Math.floor(index / 26) - 1;
+                    }
+                    return colRef;
+                };
+                
+                // Calculate row number for Excel formulas (1-based)
+                // headerRows.length (for headers) + productIndex (current product) + 1 (Excel is 1-based)
+                const rowNum = headerRows.length + productIndex + 1;
+                
+                // Create cell references
+                const unitsCol = getColRef(firstSizeColIndex + allSizes.length);
+                const wholesaleCol = getColRef(firstSizeColIndex + allSizes.length + 1);
+                const retailCol = getColRef(firstSizeColIndex + allSizes.length + 2);
+                const totalWholesaleCol = getColRef(firstSizeColIndex + allSizes.length + 3);
+                const totalRetailCol = getColRef(firstSizeColIndex + allSizes.length + 4);
+                
+                // Create size column references for SUM formula
+                const firstSizeCol = getColRef(firstSizeColIndex);
+                const lastSizeCol = getColRef(lastSizeColIndex);
+                
+                // Add formulas for calculated fields
+                row.push(
+                    { f: `SUM(${firstSizeCol}${rowNum}:${lastSizeCol}${rowNum})` }, // Units formula
+                    product.wholesalePrice,
+                    product.suggRetailPrice,
+                    { f: `${unitsCol}${rowNum}*${wholesaleCol}${rowNum}` }, // Total Wholesale formula
+                    { f: `${unitsCol}${rowNum}*${retailCol}${rowNum}` }  // Total Retail formula
+                );
+                
+                // Add the row to dataRows
+                dataRows.push(row);
+            });
+            
+            // Combine headers and data
+            const sheetData = [...headerRows, ...dataRows];
+            
+            // Create worksheet
+            const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+            
+            // Set column widths
+            const colWidths = [
+                { wch: 20 }, // Style Image
+                { wch: 25 }, // Style Name
+                { wch: 15 }, // Style Number
+                { wch: 15 }, // Color
+                { wch: 15 }, // Color Code
+                { wch: 15 }, // Season
+                { wch: 15 }, // Evergreen
+                { wch: 20 }, // Country of Origin
+                { wch: 20 }, // Fabrication
+                { wch: 25 }, // Material Composition
+                { wch: 15 }, // Category
+                { wch: 15 }, // Subcategory
+                { wch: 15 }  // Size Break
+            ];
+            
+            // Add size column widths
+            for (let i = 0; i < allSizes.length; i++) {
+                colWidths.push({ wch: 10 });
+            }
+            
+            // Add remaining column widths
+            colWidths.push(
+                { wch: 10 }, // Units
+                { wch: 15 }, // Wholesale Price
+                { wch: 15 }, // Sugg Retail Price
+                { wch: 15 }, // Total Wholesale
+                { wch: 15 }  // Total Retail
+            );
+            
+            worksheet['!cols'] = colWidths;
+            
+            // Apply styling
+            applyStylesToCatalogSheet(worksheet, headerRows.length, dataRows.length);
+            
+            return worksheet;
+        }
+        
+        // Create the order summary sheet
+        function createOrderSummarySheet(catalogIds) {
+            // Create header rows
+            const headerRows = [
+                ['Retailer', MOCK_COMPANY.name, '', '', ''],
+                []
+            ];
+            
+            // Create column headers
+            const columnHeaders = ['Season Year', 'Delivery', 'Category', 'Subcategory', 'Total Units', 'Total Wholesale (USD)', 'Total Retail (USD)'];
+            headerRows.push(columnHeaders);
+            
+            // Create summary rows
+            const dataRows = [];
+            const summaryData = [];
+            
+            // Use Excel references to catalog sheets instead of hardcoded values
+            // This ensures the Excel file will calculate based on actual data
+            for (const catalogId of catalogIds) {
+                const catalog = MOCK_CATALOGS[catalogId];
+                if (!catalog) continue;
+                
+                // Track unique categories and subcategories
+                const categoryMap = {};
+                
+                catalog.products.forEach(product => {
+                    const category = product.category;
+                    const subcategory = product.subcategory;
+                    
+                    if (!categoryMap[category]) {
+                        categoryMap[category] = new Set();
+                    }
+                    
+                    categoryMap[category].add(subcategory);
+                });
+                
+                // Add rows for each category and subcategory
+                Object.keys(categoryMap).forEach(category => {
+                    categoryMap[category].forEach(subcategory => {
+                        // We'll track this for later formula creation
+                        summaryData.push({
+                            seasonYear: catalog.seasonYear,
+                            catalog: catalog.name,
+                            category: category,
+                            subcategory: subcategory,
+                            sheetName: catalog.name // Excel sheet name reference
+                        });
+                    });
+                });
+            }
+            
+            // Generate rows with formulas referencing the catalog sheets
+            let rowIndex = headerRows.length + 1; // Starting row index for formulas (1-based for Excel)
+            
+            summaryData.forEach(item => {
+                // Build a row with formulas that reference catalog sheets
+                const row = [
+                    item.seasonYear,
+                    item.catalog,
+                    item.category,
+                    item.subcategory,
+                    { f: buildSheetReferenceFormula(item, 'units') },     // Units formula
+                    { f: buildSheetReferenceFormula(item, 'wholesale') }, // Wholesale formula
+                    { f: buildSheetReferenceFormula(item, 'retail') }     // Retail formula
+                ];
+                
+                dataRows.push(row);
+                rowIndex++;
+            });
+            
+            // Add total row with SUM formulas
+            const rowStart = headerRows.length + 1;
+            const rowEnd = headerRows.length + dataRows.length;
+            
+            dataRows.push([
+                '', 
+                'Total', 
+                '', 
+                '',
+                { f: `SUM(E${rowStart}:E${rowEnd})` }, // Sum of Units
+                { f: `SUM(F${rowStart}:F${rowEnd})` }, // Sum of Wholesale
+                { f: `SUM(G${rowStart}:G${rowEnd})` }  // Sum of Retail
+            ]);
+            
+            // Helper function to build formulas that reference catalog sheets
+            function buildSheetReferenceFormula(item, type) {
+                // This is a simplified approach - in a real implementation,
+                // we would need a more complex formula that filters by category and subcategory
+                // For demonstration, we're building a simple SUMIF-like formula
+                
+                // In a real implementation with actual sheet references:
+                // Example: =SUMIFS('Winter 25'!E:E, 'Winter 25'!K:K, "Shoes", 'Winter 25'!L:L, "Sneakers")
+                // Where:
+                // - Winter 25 is the sheet name
+                // - K:K is the Category column, L:L is the Subcategory column
+                // - E:E would be the Units/Wholesale/Retail column
+                
+                // For simplicity in this demo, we'll return a placeholder
+                // that shows the structure but doesn't require real sheet references
+                
+                if (type === 'units') {
+                    return `SUMIFS('${item.sheetName}'!$UNITS:$UNITS, '${item.sheetName}'!$CATEGORY:$CATEGORY, "${item.category}", '${item.sheetName}'!$SUBCATEGORY:$SUBCATEGORY, "${item.subcategory}")`;
+                } else if (type === 'wholesale') {
+                    return `SUMIFS('${item.sheetName}'!$TOTALWHOLESALE:$TOTALWHOLESALE, '${item.sheetName}'!$CATEGORY:$CATEGORY, "${item.category}", '${item.sheetName}'!$SUBCATEGORY:$SUBCATEGORY, "${item.subcategory}")`;
+                } else if (type === 'retail') {
+                    return `SUMIFS('${item.sheetName}'!$TOTALRETAIL:$TOTALRETAIL, '${item.sheetName}'!$CATEGORY:$CATEGORY, "${item.category}", '${item.sheetName}'!$SUBCATEGORY:$SUBCATEGORY, "${item.subcategory}")`;
+                }
+                
+                return '0'; // Fallback
+            }
+            
+            // Combine headers and data
+            const sheetData = [...headerRows, ...dataRows];
+            
+            // Create worksheet
+            const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+            
+            // Set column widths
+            worksheet['!cols'] = [
+                { wch: 20 }, // Season Year
+                { wch: 20 }, // Delivery
+                { wch: 15 }, // Category
+                { wch: 15 }, // Subcategory
+                { wch: 15 }, // Total Units
+                { wch: 20 }, // Total Wholesale
+                { wch: 20 }  // Total Retail
+            ];
+            
+            // Apply styling
+            applyStylesToSummarySheet(worksheet, headerRows.length, dataRows.length);
+            
+            return worksheet;
+        }
+        
+        // Apply styling to catalog sheet
+        function applyStylesToCatalogSheet(worksheet, headerRowCount, dataRowCount) {
+            // Apply cell formatting for currency columns
+            // Note: This is using SheetJS formatting capabilities
+            
+            // Define the range of rows that contain product data
+            const startRow = headerRowCount;
+            const endRow = startRow + dataRowCount - 1;
+            
+            // Get the column indices for Wholesale Price, Sugg Retail Price, Total Wholesale, Total Retail
+            const wholesalePriceCol = 13 + SIZE_BREAKS["1"].length + 1; // Adjust based on your column structure
+            const suggRetailPriceCol = wholesalePriceCol + 1;
+            const totalWholesaleCol = wholesalePriceCol + 2;
+            const totalRetailCol = wholesalePriceCol + 3;
+            
+            // Format currency columns
+            for (let row = startRow; row <= endRow; row++) {
+                // Convert column indices to Excel A1 notation
+                const wholesalePriceCell = XLSX.utils.encode_cell({r: row, c: wholesalePriceCol});
+                const suggRetailPriceCell = XLSX.utils.encode_cell({r: row, c: suggRetailPriceCol});
+                const totalWholesaleCell = XLSX.utils.encode_cell({r: row, c: totalWholesaleCol});
+                const totalRetailCell = XLSX.utils.encode_cell({r: row, c: totalRetailCol});
+                
+                // Apply number format for currency
+                if (worksheet[wholesalePriceCell]) {
+                    worksheet[wholesalePriceCell].z = '"$"#,##0.00';
+                }
+                if (worksheet[suggRetailPriceCell]) {
+                    worksheet[suggRetailPriceCell].z = '"$"#,##0.00';
+                }
+                if (worksheet[totalWholesaleCell]) {
+                    worksheet[totalWholesaleCell].z = '"$"#,##0.00';
+                }
+                if (worksheet[totalRetailCell]) {
+                    worksheet[totalRetailCell].z = '"$"#,##0.00';
+                }
+            }
+            
+            // Add conditional formatting for header rows
+            for (let row = 0; row < headerRowCount - 1; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const cell = XLSX.utils.encode_cell({r: row, c: col});
+                    if (worksheet[cell]) {
+                        if (!worksheet[cell].s) worksheet[cell].s = {};
+                        worksheet[cell].s.font = { bold: true };
+                    }
+                }
+            }
+            
+            // Bold the column headers row
+            const headerRow = headerRowCount - 1;
+            for (let col = 0; col < 50; col++) { // Arbitrary upper limit
+                const cell = XLSX.utils.encode_cell({r: headerRow, c: col});
+                if (worksheet[cell]) {
+                    if (!worksheet[cell].s) worksheet[cell].s = {};
+                    worksheet[cell].s.font = { bold: true };
+                    worksheet[cell].s.fill = { fgColor: { rgb: "EEEEEE" } };
+                }
+            }
+        }
+        
+        // Apply styling to summary sheet
+        function applyStylesToSummarySheet(worksheet, headerRowCount, dataRowCount) {
+            // Define the range of rows that contain summary data
+            const startRow = headerRowCount;
+            const endRow = startRow + dataRowCount - 1;
+            
+            // Format currency columns (Total Wholesale and Total Retail)
+            const wholesaleCol = 5; // F column (0-based)
+            const retailCol = 6;    // G column (0-based)
+            
+            for (let row = startRow; row <= endRow; row++) {
+                const wholesaleCell = XLSX.utils.encode_cell({r: row, c: wholesaleCol});
+                const retailCell = XLSX.utils.encode_cell({r: row, c: retailCol});
+                
+                // Apply number format for currency
+                if (worksheet[wholesaleCell]) {
+                    worksheet[wholesaleCell].z = '"$"#,##0.00';
+                }
+                if (worksheet[retailCell]) {
+                    worksheet[retailCell].z = '"$"#,##0.00';
+                }
+            }
+            
+            // Style the header rows
+            for (let row = 0; row < headerRowCount; row++) {
+                for (let col = 0; col < 7; col++) {
+                    const cell = XLSX.utils.encode_cell({r: row, c: col});
+                    if (worksheet[cell]) {
+                        if (!worksheet[cell].s) worksheet[cell].s = {};
+                        worksheet[cell].s.font = { bold: true };
+                    }
+                }
+            }
+            
+            // Style the "Total" row
+            const totalRow = startRow + dataRowCount - 1;
+            for (let col = 0; col < 7; col++) {
+                const cell = XLSX.utils.encode_cell({r: totalRow, c: col});
+                if (worksheet[cell]) {
+                    if (!worksheet[cell].s) worksheet[cell].s = {};
+                    worksheet[cell].s.font = { bold: true };
+                    worksheet[cell].s.fill = { fgColor: { rgb: "DDDDDD" } };
+                }
+            }
+        }
+        
+        // In a real implementation, this would fetch data from Shopify API
+        async function fetchShopifyData() {
+            // This would be replaced with actual API calls
+            // Placeholder for the structure
+            
+            /* Example API structure
+            async function fetchCompanyData() {
+                const response = await fetch('/api/current-company');
+                return await response.json();
+            }
+            
+            async function fetchCatalogs() {
+                const response = await fetch('/api/b2b/catalogs');
+                return await response.json();
+            }
+            
+            async function fetchCatalogProducts(catalogId) {
+                const response = await fetch(`/api/b2b/catalogs/${catalogId}/products`);
+                return await response.json();
+            }
+            */
+            
+            // For now, return mock data
+            return {
+                company: MOCK_COMPANY,
+                catalogs: Object.values(MOCK_CATALOGS)
+            };
+        }
+    </script>
+
+      {%- if section.settings.show_collection_description -%}
+        <div class="collection-hero__description rte">{{ collection.description }}</div>
+      {%- endif -%}
+    </div>
+
+    {%- if section.settings.show_collection_image and collection.image -%}
+      <div class="collection-hero__image-container media gradient">
+        <img
+          srcset="
+            {%- if collection.image.width >= 165 -%}{{ collection.image | image_url: width: 165 }} 165w,{%- endif -%}
+            {%- if collection.image.width >= 360 -%}{{ collection.image | image_url: width: 360 }} 360w,{%- endif -%}
+            {%- if collection.image.width >= 535 -%}{{ collection.image | image_url: width: 535 }} 535w,{%- endif -%}
+            {%- if collection.image.width >= 750 -%}{{ collection.image | image_url: width: 750 }} 750w,{%- endif -%}
+            {%- if collection.image.width >= 1070 -%}{{ collection.image | image_url: width: 1070 }} 1070w,{%- endif -%}
+            {%- if collection.image.width >= 1500 -%}{{ collection.image | image_url: width: 1500 }} 1500w,{%- endif -%}
+            {{ collection.image | image_url }} {{ collection.image.width }}w
+          "
+          src="{{ collection.image | image_url: width: 750 }}"
+          sizes="(min-width: {{ settings.page_width }}px) {{ settings.page_width | minus: 100 | divided_by: 2 }}px, (min-width: 750px) calc(50vw - 130px), calc(50vw - 55px)"
+          alt="{{ collection.image.alt | escape }}"
+          width="{{ collection.image.width }}"
+          height="{{ collection.image.height }}"
+        >
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main-collection-banner.name",
+  "class": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:sections.main-collection-banner.settings.paragraph.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_description",
+      "default": true,
+      "label": "t:sections.main-collection-banner.settings.show_collection_description.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_image",
+      "default": false,
+      "label": "t:sections.main-collection-banner.settings.show_collection_image.label",
+      "info": "t:sections.main-collection-banner.settings.show_collection_image.info"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    }
+  ]
+}
+{% endschema %}
