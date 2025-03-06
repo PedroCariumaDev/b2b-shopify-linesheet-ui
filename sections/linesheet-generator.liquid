@@ -1,0 +1,469 @@
+{{ 'b2b-linesheet-generator.css' | asset_url | stylesheet_tag }}
+{{ 'b2b-linesheet-generator.js' | asset_url | script_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+  
+  .linesheet-generator {
+    margin-bottom: 50px;
+  }
+  
+  @media screen and (max-width: 749px) {
+    .linesheet-generator .download-options {
+      flex-direction: column;
+    }
+    
+    .linesheet-generator .download-options button {
+      margin-bottom: 10px;
+    }
+  }
+  
+  .linesheet-generator__auth-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 2rem;
+    border: 1px solid rgba(var(--color-foreground), 0.1);
+    border-radius: 0.5rem;
+    background-color: rgba(var(--color-foreground), 0.03);
+  }
+  
+  .linesheet-generator__auth-message {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .linesheet-generator__login-form,
+  .linesheet-generator__register-link {
+    margin-top: 2rem;
+  }
+  
+  .linesheet-generator__form-field {
+    margin-bottom: 1.5rem;
+  }
+  
+  .linesheet-generator__form-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  
+  .linesheet-generator__form-field input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid rgba(var(--color-foreground), 0.1);
+    border-radius: 0.3rem;
+  }
+  
+  .linesheet-generator__auth-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+  }
+  
+  .linesheet-generator__auth-tab {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    margin-right: 0.5rem;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+  }
+  
+  .linesheet-generator__auth-tab.active {
+    border-bottom-color: rgb(var(--color-button));
+    font-weight: 500;
+  }
+  
+  .linesheet-generator__auth-tabs {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(var(--color-foreground), 0.1);
+  }
+
+  .linesheet-generator__company-details {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: rgba(var(--color-foreground), 0.03);
+    border-radius: 0.3rem;
+    border: 1px solid rgba(var(--color-foreground), 0.1);
+  }
+{%- endstyle -%}
+
+<div class="linesheet-generator section-{{ section.id }}-padding color-{{ section.settings.color_scheme }} gradient"
+  {% if settings.animations_reveal_on_scroll %} data-cascade class="scroll-trigger animate--fade-in"{% endif %}>
+  <div class="page-width">
+    <div class="linesheet-generator__inner">
+      <h1 class="linesheet-generator__title">{{ section.settings.title | escape }}</h1>
+      
+      {% comment %}
+        Check the customer state using Shopify's built-in B2B conditionals:
+        1. Not logged in (show login)
+        2. Logged in but not B2B (show B2B only message)
+        3. Logged in and B2B (show linesheet generator)
+      {% endcomment %}
+
+      {% if customer %}
+        {% if customer.b2b? %}
+          {% comment %} CUSTOMER IS B2B - Show Linesheet Generator {% endcomment %}
+          
+          {% if section.settings.show_company_details %}
+            <div class="linesheet-generator__company-details">
+              <h2>{{ customer.current_company.name }}</h2>
+              {% if customer.current_location %}
+                <p>Location: {{ customer.current_location.name }}</p>
+                
+                {% if customer.company_available_locations.size > 1 %}
+                  <details>
+                    <summary>Change Location</summary>
+                    <ul>
+                      {% for location in customer.company_available_locations %}
+                        {% unless location.current? %}
+                          <li>
+                            <a href="{{ location.url_to_set_as_current }}">{{ location.name }}</a>
+                          </li>
+                        {% endunless %}
+                      {% endfor %}
+                    </ul>
+                  </details>
+                {% endif %}
+              {% endif %}
+            </div>
+          {% endif %}
+          
+          {% if section.settings.show_description %}
+            <div class="linesheet-generator__description rte">{{ section.settings.description }}</div>
+          {% endif %}
+          
+          <div class="section">
+            <h2>{{ section.settings.catalog_section_title | escape }}</h2>
+            <p>{{ section.settings.catalog_section_subtitle | escape }}</p>
+            
+            <div class="select-controls">
+              <button id="selectAll" class="button">{{ section.settings.select_all_text | escape }}</button>
+              <button id="deselectAll" class="button">{{ section.settings.deselect_all_text | escape }}</button>
+            </div>
+            
+            <div id="catalogList" class="catalog-list">
+              <div class="catalog-list--loading">
+                <div class="loading-spinner" aria-hidden="true"></div>
+                <span>{{ section.settings.loading_text | escape }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="download-options">
+            <button id="downloadCombined" class="button" disabled>
+              <span class="icon">{% render 'icon-download' %}</span>
+              {{ section.settings.combined_button_text | escape }}
+            </button>
+            <button id="downloadSeparate" class="button" disabled>
+              <span class="icon">{% render 'icon-download' %}</span>
+              {{ section.settings.separate_button_text | escape }}
+            </button>
+          </div>
+          
+          <div id="statusMessage" class="status-message" style="display: none;"></div>
+          
+          {% comment %} Pass customer data to JavaScript {% endcomment %}
+          <script>
+            window.shopifyCustomerData = {
+              id: {{ customer.id | json }},
+              firstName: {{ customer.first_name | json }},
+              lastName: {{ customer.last_name | json }},
+              email: {{ customer.email | json }},
+              phone: {{ customer.phone | json }},
+              
+              // B2B specific data using Shopify's native B2B properties
+              companyId: {{ customer.current_company.id | json }},
+              companyName: {{ customer.current_company.name | json }},
+              locationId: {{ customer.current_location.id | json | default: "" }},
+              locationName: {{ customer.current_location.name | json | default: "" }},
+              
+              isB2B: true,
+              isLoggedIn: true,
+              shopId: {{ shop.id | json }},
+              shopUrl: {{ shop.url | json }}
+            };
+          </script>
+          
+        {% else %}
+          {% comment %} CUSTOMER IS NOT B2B - Show B2B Only Message {% endcomment %}
+          
+          <div class="linesheet-generator__auth-container">
+            <div class="linesheet-generator__auth-message">
+              {{ section.settings.b2b_only_message }}
+            </div>
+            
+            <div class="linesheet-generator__auth-actions">
+              <span></span>
+              <a href="{{ section.settings.contact_page_url }}" class="button">{{ section.settings.contact_button_text }}</a>
+            </div>
+          </div>
+          
+        {% endif %}
+        
+      {% else %}
+        {% comment %} CUSTOMER IS NOT LOGGED IN - Show Login Form {% endcomment %}
+        
+        <div class="linesheet-generator__auth-container">
+          <div class="linesheet-generator__auth-message">
+            {{ section.settings.login_message }}
+          </div>
+          
+          <div class="linesheet-generator__auth-tabs">
+            <span class="linesheet-generator__auth-tab active" data-tab="login">{{ 'customer.login_page.title' | t }}</span>
+            <span class="linesheet-generator__auth-tab" data-tab="register">{{ 'customer.register.title' | t }}</span>
+          </div>
+          
+          <div class="linesheet-generator__login-form" id="loginTab">
+            {%- form 'customer_login', novalidate: 'novalidate' -%}
+              {%- if form.errors -%}
+                <div class="form__message" role="alert">
+                  <h2 class="visually-hidden">{{ 'accessibility.error' | t }}</h2>
+                  <span class="svg-wrapper">
+                    {{- 'icon-error.svg' | inline_asset_content -}}
+                  </span>
+                  {{ form.errors | default_errors }}
+                </div>
+              {%- endif -%}
+                
+              <div class="field">
+                <input
+                  type="email"
+                  name="customer[email]"
+                  id="CustomerEmail"
+                  autocomplete="email"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  {% if form.errors contains 'form' %}
+                    aria-invalid="true"
+                  {% endif %}
+                  placeholder="{{ 'customer.login_page.email' | t }}"
+                >
+                <label for="CustomerEmail">
+                  {{ 'customer.login_page.email' | t }}
+                </label>
+              </div>
+              
+              <div class="field">
+                <input
+                  type="password"
+                  name="customer[password]"
+                  id="CustomerPassword"
+                  autocomplete="current-password"
+                  {% if form.errors contains 'form' %}
+                    aria-invalid="true"
+                  {% endif %}
+                  placeholder="{{ 'customer.login_page.password' | t }}"
+                >
+                <label for="CustomerPassword">
+                  {{ 'customer.login_page.password' | t }}
+                </label>
+              </div>
+              
+              <div class="linesheet-generator__auth-actions">
+                <a href="{{ routes.account_recover_url }}">{{ 'customer.login_page.forgot_password' | t }}</a>
+                <button type="submit" class="button">{{ 'customer.login_page.sign_in' | t }}</button>
+              </div>
+              
+              <input type="hidden" name="return_url" value="{{ request.path }}">
+            {%- endform -%}
+          </div>
+          
+          <div class="linesheet-generator__register-link" id="registerTab" style="display: none;">
+            <p>{{ section.settings.register_message }}</p>
+            <div class="linesheet-generator__auth-actions">
+              <span></span>
+              <a href="{{ routes.account_register_url }}" class="button">{{ 'customer.register.submit' | t }}</a>
+            </div>
+          </div>
+        </div>
+        
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            const loginTab = document.querySelector('[data-tab="login"]');
+            const registerTab = document.querySelector('[data-tab="register"]');
+            const loginContent = document.getElementById('loginTab');
+            const registerContent = document.getElementById('registerTab');
+            
+            loginTab.addEventListener('click', function() {
+              loginTab.classList.add('active');
+              registerTab.classList.remove('active');
+              loginContent.style.display = 'block';
+              registerContent.style.display = 'none';
+            });
+            
+            registerTab.addEventListener('click', function() {
+              registerTab.classList.add('active');
+              loginTab.classList.remove('active');
+              registerContent.style.display = 'block';
+              loginContent.style.display = 'none';
+            });
+          });
+        </script>
+        
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.linesheet-generator.name",
+  "class": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.linesheet-generator.settings.title.label",
+      "default": "Linesheet Generator"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.linesheet-generator.settings.header_b2b.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_company_details",
+      "label": "t:sections.linesheet-generator.settings.show_company_details.label",
+      "default": true,
+      "info": "t:sections.linesheet-generator.settings.show_company_details.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "t:sections.linesheet-generator.settings.show_description.label",
+      "default": true
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "t:sections.linesheet-generator.settings.description.label",
+      "default": "<p>Generate and download your custom product linesheets.</p>"
+    },
+    {
+      "type": "text",
+      "id": "catalog_section_title",
+      "label": "t:sections.linesheet-generator.settings.catalog_section_title.label",
+      "default": "Your Available Catalogs"
+    },
+    {
+      "type": "text",
+      "id": "catalog_section_subtitle",
+      "label": "t:sections.linesheet-generator.settings.catalog_section_subtitle.label",
+      "default": "Select the catalogs you'd like to include in your linesheet"
+    },
+    {
+      "type": "text",
+      "id": "loading_text",
+      "label": "t:sections.linesheet-generator.settings.loading_text.label",
+      "default": "Loading catalogs..."
+    },
+    {
+      "type": "text",
+      "id": "select_all_text",
+      "label": "t:sections.linesheet-generator.settings.select_all_text.label",
+      "default": "Select All"
+    },
+    {
+      "type": "text",
+      "id": "deselect_all_text",
+      "label": "t:sections.linesheet-generator.settings.deselect_all_text.label",
+      "default": "Deselect All"
+    },
+    {
+      "type": "text",
+      "id": "combined_button_text",
+      "label": "t:sections.linesheet-generator.settings.combined_button_text.label",
+      "default": "Download Combined Linesheet"
+    },
+    {
+      "type": "text",
+      "id": "separate_button_text",
+      "label": "t:sections.linesheet-generator.settings.separate_button_text.label",
+      "default": "Download Separate Linesheets"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.linesheet-generator.settings.header_non_b2b.content"
+    },
+    {
+      "type": "richtext",
+      "id": "b2b_only_message",
+      "label": "t:sections.linesheet-generator.settings.b2b_only_message.label",
+      "default": "<p>This feature is only available for B2B clients. Please contact us to learn more about our B2B program.</p>"
+    },
+    {
+      "type": "text",
+      "id": "contact_button_text",
+      "label": "t:sections.linesheet-generator.settings.contact_button_text.label",
+      "default": "Contact Us"
+    },
+    {
+      "type": "url",
+      "id": "contact_page_url",
+      "label": "t:sections.linesheet-generator.settings.contact_page_url.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.linesheet-generator.settings.header_guest.content"
+    },
+    {
+      "type": "richtext",
+      "id": "login_message",
+      "label": "t:sections.linesheet-generator.settings.login_message.label",
+      "default": "<p>Please login to your B2B account to access the linesheet generator.</p>"
+    },
+    {
+      "type": "richtext",
+      "id": "register_message",
+      "label": "t:sections.linesheet-generator.settings.register_message.label",
+      "default": "<p>Not registered for B2B access yet? Please register to get access to wholesale pricing and exclusive B2B features.</p>"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 36
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "background-1"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.linesheet-generator.presets.name"
+    }
+  ]
+}
+{% endschema %}

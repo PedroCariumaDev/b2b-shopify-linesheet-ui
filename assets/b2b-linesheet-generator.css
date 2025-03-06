@@ -1,0 +1,159 @@
+.linesheet-generator__inner {
+  padding: 3rem 0;
+}
+
+.linesheet-generator__title {
+  margin-bottom: 2rem;
+  font-size: calc(var(--font-heading-scale) * 3rem);
+  line-height: 1.3;
+}
+
+.linesheet-generator__description {
+  margin-top: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.linesheet-generator .section {
+  margin-bottom: 3rem;
+}
+
+.linesheet-generator h2 {
+  margin-bottom: 1rem;
+  font-size: calc(var(--font-heading-scale) * 2rem);
+}
+
+.linesheet-generator .catalog-list {
+  margin: 2rem 0;
+}
+
+.linesheet-generator .catalog-item {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  border: 0.1rem solid rgba(var(--color-foreground), 0.1);
+  border-radius: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.linesheet-generator .catalog-item:hover {
+  background-color: rgba(var(--color-foreground), 0.03);
+}
+
+.linesheet-generator .catalog-item label {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+}
+
+.linesheet-generator .catalog-details {
+  margin-left: 1.5rem;
+  flex-grow: 1;
+}
+
+.linesheet-generator .catalog-title {
+  font-weight: 600;
+  font-size: 1.6rem;
+}
+
+.linesheet-generator .catalog-meta {
+  font-size: 1.4rem;
+  color: rgba(var(--color-foreground), 0.7);
+  margin-top: 0.3rem;
+}
+
+.linesheet-generator .download-options {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.linesheet-generator .button {
+  display: flex;
+  align-items: center;
+}
+
+.linesheet-generator .button .icon {
+  margin-right: 1rem;
+  width: 2rem;
+  height: 2rem;
+}
+
+.linesheet-generator .loading-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 0.3rem solid rgba(var(--color-foreground), 0.1);
+  border-radius: 50%;
+  border-top-color: rgb(var(--color-foreground));
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 1.5rem;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.linesheet-generator .status-message {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 0.3rem;
+}
+
+.linesheet-generator .status-message.success {
+  background-color: rgba(var(--color-success), 0.1);
+  color: rgb(var(--color-success));
+  border: 0.1rem solid rgba(var(--color-success), 0.2);
+}
+
+.linesheet-generator .status-message.error {
+  background-color: rgba(var(--color-error), 0.1);
+  color: rgb(var(--color-error));
+  border: 0.1rem solid rgba(var(--color-error), 0.2);
+}
+
+.linesheet-generator .status-message.loading {
+  background-color: rgba(var(--color-foreground), 0.05);
+  color: rgb(var(--color-foreground));
+  border: 0.1rem solid rgba(var(--color-foreground), 0.1);
+}
+
+.linesheet-generator .catalog-list--loading {
+  padding: 3rem;
+  text-align: center;
+  color: rgba(var(--color-foreground), 0.6);
+  background-color: rgba(var(--color-foreground), 0.03);
+  border-radius: 0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  min-height: 10rem;
+}
+
+.linesheet-generator .select-controls {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.linesheet-generator .select-controls .button {
+  background: transparent;
+  border: none;
+  color: rgba(var(--color-foreground), 0.75);
+  font-size: 1.4rem;
+  padding: 0.5rem 1rem;
+  text-decoration: underline;
+  margin-right: 1.5rem;
+  transition: color 0.2s ease;
+  box-shadow: none;
+  min-height: auto;
+  min-width: auto;
+}
+
+.linesheet-generator .select-controls .button:hover {
+  color: rgba(var(--color-foreground), 1);
+  background: transparent;
+  text-decoration: underline;
+}
