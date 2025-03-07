@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "banner": {
@@ -27,9 +36,34 @@
         "padding_top": 36,
         "padding_bottom": 36
       }
+    },
+    "linesheet_generator_idUmxi": {
+      "type": "linesheet-generator",
+      "settings": {
+        "title": "Linesheet Generator",
+        "show_company_details": true,
+        "show_description": true,
+        "description": "<p>Generate and download your custom product linesheets.</p>",
+        "catalog_section_title": "Your Available Catalogs",
+        "catalog_section_subtitle": "Select the catalogs you'd like to include in your linesheet",
+        "loading_text": "Loading catalogs...",
+        "select_all_text": "Select All",
+        "deselect_all_text": "Deselect All",
+        "combined_button_text": "Download Combined Linesheet",
+        "separate_button_text": "Download Separate Linesheets",
+        "b2b_only_message": "<p>This feature is only available for B2B clients. Please contact us to learn more about our B2B program.</p>",
+        "contact_button_text": "Contact Us",
+        "contact_page_url": "",
+        "login_message": "<p>Please login to your B2B account to access the linesheet generator.</p>",
+        "register_message": "<p>Not registered for B2B access yet? Please register to get access to wholesale pricing and exclusive B2B features.</p>",
+        "padding_top": 36,
+        "padding_bottom": 36,
+        "color_scheme": ""
+      }
     }
   },
   "order": [
+    "linesheet_generator_idUmxi",
     "banner",
     "product-grid"
   ]
