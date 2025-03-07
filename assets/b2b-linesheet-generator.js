@@ -20,7 +20,7 @@ class LinesheetGenerator {
     this.catalogsData = null;
     
     // Server API URL - Change in production
-    this.serverUrl = 'http://localhost:3000';
+    this.serverUrl = 'https://b2b-linesheet-generator-service.vercel.app';
     
     // Initialize
     this.init();
