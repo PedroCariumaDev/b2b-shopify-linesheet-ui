@@ -244,11 +244,13 @@ class LinesheetGenerator {
   }
   
   /**
-   * Generate linesheet on server
+   * Generate linesheet on server - Updated to ensure correct file extensions
    */
   async generateLinesheetOnServer(data, filename) {
     // Show loading indicator
-    this.showLoadingState('Generating your linesheet...');
+    this.showLoadingState(data.outputType === 'separate' && data.catalogs.length > 1 ? 
+      'Generating your separate linesheets...' : 
+      'Generating your linesheet...');
 
     try {
       // Call the server to generate Excel
@@ -261,24 +263,56 @@ class LinesheetGenerator {
       });
       
       if (!response.ok) {
-        throw new Error('Server error generating linesheet');
+        throw new Error(`Server error generating linesheet: ${response.status} ${response.statusText}`);
       }
+      
+      // Check content type to determine if it's a ZIP file or Excel file
+      const contentType = response.headers.get('Content-Type');
+      const contentDisposition = response.headers.get('Content-Disposition') || '';
+      
+      // Extract actual filename from Content-Disposition if available
+      let actualFilename = filename;
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+      if (filenameMatch && filenameMatch[1]) {
+        actualFilename = filenameMatch[1];
+      }
+      
+      // Force .zip extension for multiple files (separate output type with multiple catalogs)
+      if (contentType === 'application/zip' || 
+          (data.outputType === 'separate' && data.catalogs.length > 1)) {
+        // Ensure filename ends with .zip
+        if (!actualFilename.toLowerCase().endsWith('.zip')) {
+          actualFilename = actualFilename.replace(/\.[^/.]+$/, "") + '.zip';
+        }
+      }
+      
+      console.log(`Downloading file as: ${actualFilename} with content type: ${contentType}`);
       
       // Handle file download
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      
+      // Create a new blob with the correct type if needed
+      const downloadBlob = contentType === 'application/zip' ? 
+        new Blob([blob], { type: 'application/zip' }) : blob;
+      
+      const url = window.URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filename;
+      a.download = actualFilename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
       
-      this.showStatusMessage('Your linesheet has been generated!', 'success');
+      // Show appropriate success message
+      if (contentType === 'application/zip' || (data.outputType === 'separate' && data.catalogs.length > 1)) {
+        this.showStatusMessage('Your linesheets have been generated and downloaded as a ZIP file!', 'success');
+      } else {
+        this.showStatusMessage('Your linesheet has been generated!', 'success');
+      }
     } catch (error) {
       console.error('Error generating linesheet:', error);
-      this.showStatusMessage('Error generating linesheet. Please try again.', 'error');
+      this.showStatusMessage(`Error generating linesheet: ${error.message}`, 'error');
     } finally {
       this.hideLoadingState();
     }
@@ -348,60 +382,64 @@ class LinesheetGenerator {
   
   /**
    * Fetch data from server
-   * This implementation uses the new server API endpoints
+   * This implementation works with the location ID that's already included in shopifyCustomerData
    */
   async fetchData() {
     console.log('Fetching data from server...');
     
     try {
-      // 1. Get company data from Liquid (already injected into window.shopifyCustomerData)
-      const company = this.getCompanyFromLiquid();
+      // Get the customer data and location ID from the Liquid-injected object
+      const customerData = window.shopifyCustomerData || {};
       
-      // 2. Fetch complete data (catalogs + products) from the server
-      const customerId = company.id;
-      const response = await fetch(`${this.serverUrl}/api/complete-data/${customerId}`);
+      // Get location ID - this is crucial for B2B functionality
+      const locationId = customerData.locationId;
+      
+      if (!locationId) {
+        console.error('No location ID found in Shopify customer data');
+        throw new Error('No location ID available. Please ensure you have selected a company location.');
+      }
+      
+      console.log('Using location ID:', locationId);
+      
+      // Fetch B2B data from the server using the location ID
+      const response = await fetch(`${this.serverUrl}/api/location/${locationId}/b2b-data`);
       
       if (!response.ok) {
         throw new Error(`Server returned ${response.status}: ${response.statusText}`);
       }
       
+      // Parse the response data
       const data = await response.json();
-      const catalogs = data.catalogs || [];
       
-      return { company, catalogs };
+      // Prepare company data from both sources
+      const company = {
+        // Use data from the API response for company info
+        id: data.company.id || customerData.companyId,
+        name: data.company.name || customerData.companyName,
+        externalId: data.company.externalId,
+        
+        // For contact info, try API first, then Liquid data
+        email: (data.company.contact && data.company.contact.email) || customerData.email,
+        phone: (data.company.contact && data.company.contact.phone) || customerData.phone,
+        
+        // For address, use location address if available
+        address: data.location && data.location.address ? data.location.address : {
+          address1: customerData.address1 || '',
+          address2: customerData.address2 || '',
+          city: customerData.city || '',
+          zip: customerData.zip || '',
+          country: customerData.country || ''
+        }
+      };
+      
+      return { 
+        company, 
+        catalogs: data.catalogs || []
+      };
     } catch (error) {
       console.error('Error fetching data from server:', error);
-      throw new Error('Failed to load data from server');
+      throw new Error('Failed to load data from server: ' + error.message);
     }
-  }
-
-  /**
-   * Get company data from Liquid-injected object
-   */
-  getCompanyFromLiquid() {
-    // Get the data injected by Liquid
-    const customerData = window.shopifyCustomerData || {};
-    
-    // Prepare company object from Liquid data
-    const company = {
-      id: customerData.companyId || customerData.id || '12345',
-      name: customerData.companyName || customerData.company || 
-            `${customerData.firstName} ${customerData.lastName}` || 'Guest Customer',
-      email: customerData.email || '',
-      phone: customerData.phone || '',
-      address: {
-        address1: customerData.address1 || '',
-        address2: customerData.address2 || '',
-        city: customerData.city || '',
-        zip: customerData.zip || '',
-        country: customerData.country || ''
-      },
-      tags: customerData.tags || []
-    };
-    
-    console.log('Company data from Liquid:', company);
-    
-    return company;
   }
 }
 
