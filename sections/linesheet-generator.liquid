@@ -42,51 +42,10 @@
     text-align: center;
   }
   
-  .linesheet-generator__login-form,
-  .linesheet-generator__register-link {
-    margin-top: 2rem;
-  }
-  
-  .linesheet-generator__form-field {
-    margin-bottom: 1.5rem;
-  }
-  
-  .linesheet-generator__form-field label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-  }
-  
-  .linesheet-generator__form-field input {
-    width: 100%;
-    padding: 0.8rem;
-    border: 1px solid rgba(var(--color-foreground), 0.1);
-    border-radius: 0.3rem;
-  }
-  
   .linesheet-generator__auth-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: center;
     margin-top: 2rem;
-  }
-  
-  .linesheet-generator__auth-tab {
-    display: inline-block;
-    padding: 0.8rem 1.5rem;
-    margin-right: 0.5rem;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-  }
-  
-  .linesheet-generator__auth-tab.active {
-    border-bottom-color: rgb(var(--color-button));
-    font-weight: 500;
-  }
-  
-  .linesheet-generator__auth-tabs {
-    margin-bottom: 2rem;
-    border-bottom: 1px solid rgba(var(--color-foreground), 0.1);
   }
 
   .linesheet-generator__company-details {
@@ -106,7 +65,7 @@
       
       {% comment %}
         Check the customer state using Shopify's built-in B2B conditionals:
-        1. Not logged in (show login)
+        1. Not logged in (show intro and login CTA)
         2. Logged in but not B2B (show B2B only message)
         3. Logged in and B2B (show linesheet generator)
       {% endcomment %}
@@ -204,7 +163,6 @@
             </div>
             
             <div class="linesheet-generator__auth-actions">
-              <span></span>
               <a href="{{ section.settings.contact_page_url }}" class="button">{{ section.settings.contact_button_text }}</a>
             </div>
           </div>
@@ -212,104 +170,17 @@
         {% endif %}
         
       {% else %}
-        {% comment %} CUSTOMER IS NOT LOGGED IN - Show Login Form {% endcomment %}
+        {% comment %} CUSTOMER IS NOT LOGGED IN - Show Introduction and Login CTA {% endcomment %}
         
         <div class="linesheet-generator__auth-container">
           <div class="linesheet-generator__auth-message">
-            {{ section.settings.login_message }}
+            {{ section.settings.guest_intro_message }}
           </div>
           
-          <div class="linesheet-generator__auth-tabs">
-            <span class="linesheet-generator__auth-tab active" data-tab="login">{{ 'customer.login_page.title' | t }}</span>
-            <span class="linesheet-generator__auth-tab" data-tab="register">{{ 'customer.register.title' | t }}</span>
-          </div>
-          
-          <div class="linesheet-generator__login-form" id="loginTab">
-            {%- form 'customer_login', novalidate: 'novalidate' -%}
-              {%- if form.errors -%}
-                <div class="form__message" role="alert">
-                  <h2 class="visually-hidden">{{ 'accessibility.error' | t }}</h2>
-                  <span class="svg-wrapper">
-                    {{- 'icon-error.svg' | inline_asset_content -}}
-                  </span>
-                  {{ form.errors | default_errors }}
-                </div>
-              {%- endif -%}
-                
-              <div class="field">
-                <input
-                  type="email"
-                  name="customer[email]"
-                  id="CustomerEmail"
-                  autocomplete="email"
-                  autocorrect="off"
-                  autocapitalize="off"
-                  {% if form.errors contains 'form' %}
-                    aria-invalid="true"
-                  {% endif %}
-                  placeholder="{{ 'customer.login_page.email' | t }}"
-                >
-                <label for="CustomerEmail">
-                  {{ 'customer.login_page.email' | t }}
-                </label>
-              </div>
-              
-              <div class="field">
-                <input
-                  type="password"
-                  name="customer[password]"
-                  id="CustomerPassword"
-                  autocomplete="current-password"
-                  {% if form.errors contains 'form' %}
-                    aria-invalid="true"
-                  {% endif %}
-                  placeholder="{{ 'customer.login_page.password' | t }}"
-                >
-                <label for="CustomerPassword">
-                  {{ 'customer.login_page.password' | t }}
-                </label>
-              </div>
-              
-              <div class="linesheet-generator__auth-actions">
-                <a href="{{ routes.account_recover_url }}">{{ 'customer.login_page.forgot_password' | t }}</a>
-                <button type="submit" class="button">{{ 'customer.login_page.sign_in' | t }}</button>
-              </div>
-              
-              <input type="hidden" name="return_url" value="{{ request.path }}">
-            {%- endform -%}
-          </div>
-          
-          <div class="linesheet-generator__register-link" id="registerTab" style="display: none;">
-            <p>{{ section.settings.register_message }}</p>
-            <div class="linesheet-generator__auth-actions">
-              <span></span>
-              <a href="{{ routes.account_register_url }}" class="button">{{ 'customer.register.submit' | t }}</a>
-            </div>
+          <div class="linesheet-generator__auth-actions">
+            <a href="/account/login" class="button">{{ section.settings.login_button_text }}</a>
           </div>
         </div>
-        
-        <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            const loginTab = document.querySelector('[data-tab="login"]');
-            const registerTab = document.querySelector('[data-tab="register"]');
-            const loginContent = document.getElementById('loginTab');
-            const registerContent = document.getElementById('registerTab');
-            
-            loginTab.addEventListener('click', function() {
-              loginTab.classList.add('active');
-              registerTab.classList.remove('active');
-              loginContent.style.display = 'block';
-              registerContent.style.display = 'none';
-            });
-            
-            registerTab.addEventListener('click', function() {
-              registerTab.classList.add('active');
-              loginTab.classList.remove('active');
-              registerContent.style.display = 'block';
-              loginContent.style.display = 'none';
-            });
-          });
-        </script>
         
       {% endif %}
     </div>
@@ -318,120 +189,120 @@
 
 {% schema %}
 {
-  "name": "t:sections.linesheet-generator.name",
+  "name": "B2B Linesheet Generator",
   "class": "section",
   "settings": [
     {
       "type": "text",
       "id": "title",
-      "label": "t:sections.linesheet-generator.settings.title.label",
+      "label": "Section Title",
       "default": "Linesheet Generator"
     },
     {
       "type": "header",
-      "content": "t:sections.linesheet-generator.settings.header_b2b.content"
+      "content": "B2B Customer Settings"
     },
     {
       "type": "checkbox",
       "id": "show_company_details",
-      "label": "t:sections.linesheet-generator.settings.show_company_details.label",
+      "label": "Show Company Details",
       "default": true,
-      "info": "t:sections.linesheet-generator.settings.show_company_details.info"
+      "info": "Display company name and location details for B2B customers"
     },
     {
       "type": "checkbox",
       "id": "show_description",
-      "label": "t:sections.linesheet-generator.settings.show_description.label",
+      "label": "Show Description",
       "default": true
     },
     {
       "type": "richtext",
       "id": "description",
-      "label": "t:sections.linesheet-generator.settings.description.label",
+      "label": "Description",
       "default": "<p>Generate and download your custom product linesheets.</p>"
     },
     {
       "type": "text",
       "id": "catalog_section_title",
-      "label": "t:sections.linesheet-generator.settings.catalog_section_title.label",
+      "label": "Catalog Section Title",
       "default": "Your Available Catalogs"
     },
     {
       "type": "text",
       "id": "catalog_section_subtitle",
-      "label": "t:sections.linesheet-generator.settings.catalog_section_subtitle.label",
+      "label": "Catalog Section Subtitle",
       "default": "Select the catalogs you'd like to include in your linesheet"
     },
     {
       "type": "text",
       "id": "loading_text",
-      "label": "t:sections.linesheet-generator.settings.loading_text.label",
+      "label": "Loading Text",
       "default": "Loading catalogs..."
     },
     {
       "type": "text",
       "id": "select_all_text",
-      "label": "t:sections.linesheet-generator.settings.select_all_text.label",
+      "label": "Select All Text",
       "default": "Select All"
     },
     {
       "type": "text",
       "id": "deselect_all_text",
-      "label": "t:sections.linesheet-generator.settings.deselect_all_text.label",
+      "label": "Deselect All Text",
       "default": "Deselect All"
     },
     {
       "type": "text",
       "id": "combined_button_text",
-      "label": "t:sections.linesheet-generator.settings.combined_button_text.label",
+      "label": "Combined Button Text",
       "default": "Download Combined Linesheet"
     },
     {
       "type": "text",
       "id": "separate_button_text",
-      "label": "t:sections.linesheet-generator.settings.separate_button_text.label",
+      "label": "Separate Button Text",
       "default": "Download Separate Linesheets"
     },
     {
       "type": "header",
-      "content": "t:sections.linesheet-generator.settings.header_non_b2b.content"
+      "content": "Regular Customer Settings"
     },
     {
       "type": "richtext",
       "id": "b2b_only_message",
-      "label": "t:sections.linesheet-generator.settings.b2b_only_message.label",
+      "label": "B2B Only Message",
       "default": "<p>This feature is only available for B2B clients. Please contact us to learn more about our B2B program.</p>"
     },
     {
       "type": "text",
       "id": "contact_button_text",
-      "label": "t:sections.linesheet-generator.settings.contact_button_text.label",
+      "label": "Contact Button Text",
       "default": "Contact Us"
     },
     {
       "type": "url",
       "id": "contact_page_url",
-      "label": "t:sections.linesheet-generator.settings.contact_page_url.label"
+      "label": "Contact Page URL"
     },
     {
       "type": "header",
-      "content": "t:sections.linesheet-generator.settings.header_guest.content"
+      "content": "Guest User Settings"
     },
     {
       "type": "richtext",
-      "id": "login_message",
-      "label": "t:sections.linesheet-generator.settings.login_message.label",
-      "default": "<p>Please login to your B2B account to access the linesheet generator.</p>"
+      "id": "guest_intro_message",
+      "label": "Guest Introduction Text",
+      "default": "<p>Welcome to our B2B Linesheet Generator. This tool allows our wholesale partners to create and download custom product linesheets with the latest product information. Please log in to your B2B account to access this feature.</p>"
     },
     {
-      "type": "richtext",
-      "id": "register_message",
-      "label": "t:sections.linesheet-generator.settings.register_message.label",
-      "default": "<p>Not registered for B2B access yet? Please register to get access to wholesale pricing and exclusive B2B features.</p>"
+      "type": "text",
+      "id": "login_button_text",
+      "label": "Login Button Text",
+      "default": "Log In to Your Account"
     },
     {
       "type": "header",
-      "content": "t:sections.all.padding.section_padding_heading"
+      "content": "Section Padding"
     },
     {
       "type": "range",
@@ -440,7 +311,7 @@
       "max": 100,
       "step": 4,
       "unit": "px",
-      "label": "t:sections.all.padding.padding_top",
+      "label": "Padding Top",
       "default": 36
     },
     {
@@ -450,19 +321,19 @@
       "max": 100,
       "step": 4,
       "unit": "px",
-      "label": "t:sections.all.padding.padding_bottom",
+      "label": "Padding Bottom",
       "default": 36
     },
     {
       "type": "color_scheme",
       "id": "color_scheme",
-      "label": "t:sections.all.colors.label",
+      "label": "Color Scheme",
       "default": "background-1"
     }
   ],
   "presets": [
     {
-      "name": "t:sections.linesheet-generator.presets.name"
+      "name": "B2B Linesheet Generator"
     }
   ]
 }
