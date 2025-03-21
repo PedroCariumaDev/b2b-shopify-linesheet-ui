@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "image_banner": {
@@ -26,14 +35,15 @@
         "heading",
         "button"
       ],
+      "disabled": true,
       "settings": {
         "image_overlay_opacity": 40,
         "image_height": "large",
         "desktop_content_position": "bottom-center",
         "show_text_box": false,
-        "image_behavior": "none",
         "desktop_content_alignment": "center",
         "color_scheme": "scheme-3",
+        "image_behavior": "none",
         "mobile_content_alignment": "center",
         "stack_images_on_mobile": false,
         "show_text_below": false
@@ -50,12 +60,11 @@
         "collection": "all",
         "products_to_show": 8,
         "columns_desktop": 4,
-        "color_scheme": "scheme-1",
         "full_width": false,
         "show_view_all": true,
         "view_all_style": "solid",
         "enable_desktop_slider": false,
-        "swipe_on_mobile": false,
+        "color_scheme": "scheme-1",
         "image_ratio": "adapt",
         "image_shape": "default",
         "show_secondary_image": true,
@@ -63,12 +72,38 @@
         "show_rating": false,
         "quick_add": "none",
         "columns_mobile": "2",
+        "swipe_on_mobile": false,
         "padding_top": 44,
         "padding_bottom": 36
+      }
+    },
+    "linesheet_generator_RWwrEk": {
+      "type": "linesheet-generator",
+      "settings": {
+        "title": "Linesheet Generator",
+        "show_company_details": true,
+        "show_description": true,
+        "description": "<p>Generate and download your custom product linesheets.</p>",
+        "catalog_section_title": "Your Available Catalogs",
+        "catalog_section_subtitle": "Select the catalogs you'd like to include in your linesheet",
+        "loading_text": "Loading catalogs...",
+        "select_all_text": "Select All",
+        "deselect_all_text": "Deselect All",
+        "combined_button_text": "Download Combined Linesheet",
+        "separate_button_text": "Download Separate Linesheets",
+        "b2b_only_message": "<p>This feature is only available for B2B clients. Please contact us to learn more about our B2B program.</p>",
+        "contact_button_text": "Contact Us",
+        "contact_page_url": "",
+        "guest_intro_message": "<p>Welcome to our B2B Linesheet Generator. This tool allows our wholesale partners to create and download custom product linesheets with the latest product information. Please log in to your B2B account to access this feature.</p>",
+        "login_button_text": "Log In to Your Account",
+        "padding_top": 36,
+        "padding_bottom": 36,
+        "color_scheme": ""
       }
     }
   },
   "order": [
+    "linesheet_generator_RWwrEk",
     "image_banner",
     "featured_collection"
   ]
